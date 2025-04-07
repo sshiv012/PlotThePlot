@@ -121,21 +121,21 @@ The frontend fetches the result of /api/analyze, parses the schema, and visualiz
 
 🧩 Flask Backend
 ```bash
-cd backend
+cd src/api
 export GEMINI_API_KEY=your_key_here
-python app.py
+python index.py
 ```
 
 🖼️ Frontend (Next.js)
+At project root directory
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
 Environment variable (.env.local)
 
 NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:5328
-
+Ensure NEXT_PUBLIC_BACKEND_URL and GEMINI_API_KEY is set correctly.
 
 
 🌍 Deployment on Vercel

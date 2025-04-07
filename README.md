@@ -120,34 +120,35 @@ The frontend fetches the result of /api/analyze, parses the schema, and visualiz
 🚀 How to Run Locally
 
 🧩 Flask Backend
-
+```bash
 cd backend
 export GEMINI_API_KEY=your_key_here
 python app.py
+```
 
 🖼️ Frontend (Next.js)
-
+```bash
 cd frontend
 npm install
 npm run dev
-
+```
 Environment variable (.env.local)
 
 NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:5328
-⸻
+
+
 
 🌍 Deployment on Vercel
 -	You can host the frontend on Vercel
 -	Use a public backend (Flask) deployed on Vercel or any server
 -	Update NEXT_PUBLIC_BACKEND_URL in your Vercel project settings
-⸻
 
 🔮 Future Improvements
 -	Add support for custom user-uploaded books
 -	Add PDF export of the visualization for presentations
 -	Evaluate LLaMA 4 as an alternative (Just released: April 6, 2025)
-⸻
 
 👥 Authors & Contributors
 -	Developed by Suryaa Charan
+-	Ideated by Nasr Maswood
 -	Feedback & Suggestions welcome!

@@ -46,13 +46,15 @@ export default function GraphVisualizer({ data }: { data: any }) {
         d3
           .forceLink(links)
           .id((d: any) => d.id)
-          .distance(200)
+          .distance((d: any) => 150 + (10 - d.weight) * 10)
+          .strength(0.8)
       )
-      .force("charge", d3.forceManyBody().strength(-400))
+      .force("charge", d3.forceManyBody().strength(-500)) // Stronger repulsion
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("x", d3.forceX(width / 2).strength(0.05))
       .force("y", d3.forceY(height / 2).strength(0.05))
-      .force("collision", d3.forceCollide().radius(40));
+      .force("collision", d3.forceCollide().radius((d: any) => d.label.length * 4 + 30)) // Prevent overlaps
+      .alphaDecay(0.03);
 
     const tooltip = d3
       .select("body")
@@ -71,9 +73,10 @@ export default function GraphVisualizer({ data }: { data: any }) {
       .append("g")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0.6)
-      .selectAll("line")
+      .selectAll("path")
       .data(links)
-      .join("line")
+      .join("path")
+      .attr("fill", "none")
       .attr("stroke-width", (d: any) => d.weight);
 
     const nodeGroup = svg
@@ -87,9 +90,9 @@ export default function GraphVisualizer({ data }: { data: any }) {
         tooltip
           .html(
             `<strong>${d.label}</strong><br/>` +
-              `<em>${d.description}</em><br/>` +
-              `<strong>Traits:</strong> ${d.traits.join(", ")}<br/>` +
-              `<strong>Aliases:</strong> ${d.names.join(", ")}`
+            `<em>${d.description}</em><br/>` +
+            `<strong>Traits:</strong> ${d.traits.join(", ")}<br/>` +
+            `<strong>Aliases:</strong> ${d.names.join(", ")}`
           )
           .style("visibility", "visible");
       })
@@ -102,7 +105,7 @@ export default function GraphVisualizer({ data }: { data: any }) {
         d3.select(this).select("rect").classed("node-highlight", false);
         tooltip.style("visibility", "hidden");
       });
-    
+
     // Draw rectangles with dynamic width
     nodeGroup.append("rect")
       .attr("fill", (d: any) => (d.main ? "#f87171" : "#60a5fa"))
@@ -112,7 +115,7 @@ export default function GraphVisualizer({ data }: { data: any }) {
       .attr("width", (d: any) => d.label.length * 8 + 20) // padding around text
       .attr("x", (d: any) => -(d.label.length * 4 + 10)) // center the rect
       .attr("y", -14); // center vertically
-    
+
     // Add text
     nodeGroup.append("text")
       .text((d: any) => d.label)
@@ -122,14 +125,14 @@ export default function GraphVisualizer({ data }: { data: any }) {
       .attr("font-size", 12);
 
     link
-     .on("mouseover", function (event, d:any) {
+      .on("mouseover", function (event, d: any) {
         d3.select(this as SVGLineElement).classed("edge-highlight", true);
         tooltip
           .html(
             `<strong>Relation:</strong><br/>` +
-              `${d.source.label} (${d.role1}) → ${d.target.label} (${d.role2})<br/><br/>` +
-              `<strong>Key Dialogs:</strong><br/>` +
-              d.key_dialogs.map((line: string) => `“${line}”`).join("<br/>")
+            `${d.source.label} (${d.role1}) → ${d.target.label} (${d.role2})<br/><br/>` +
+            `<strong>Key Dialogs:</strong><br/>` +
+            d.key_dialogs.map((line: string) => `“${line}”`).join("<br/>")
           )
           .style("visibility", "visible");
 
@@ -151,18 +154,20 @@ export default function GraphVisualizer({ data }: { data: any }) {
 
     simulation.on("tick", () => {
       link
-        .attr("x1", (d: any) => d.source.x)
-        .attr("y1", (d: any) => d.source.y)
-        .attr("x2", (d: any) => d.target.x)
-        .attr("y2", (d: any) => d.target.y);
+  .attr("d", (d: any) => {
+    const dx = d.target.x - d.source.x;
+    const dy = d.target.y - d.source.y;
+    const dr = Math.sqrt(dx * dx + dy * dy) * 0.7;
+    return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+  });
       nodeGroup.attr("transform", (d: any) => {
-          // Clamp within bounds
-          d.x = Math.max(50, Math.min(width - 50, d.x));
-          d.y = Math.max(30, Math.min(height - 30, d.y));
-          return `translate(${d.x},${d.y})`;
-        });    
-      }).force("center", d3.forceCenter(width / 2, height / 2))
-    .alphaDecay(0.05) ;
+        // Clamp within bounds
+        d.x = Math.max(50, Math.min(width - 50, d.x));
+        d.y = Math.max(30, Math.min(height - 30, d.y));
+        return `translate(${d.x},${d.y})`;
+      });
+    }).force("center", d3.forceCenter(width / 2, height / 2))
+      .alphaDecay(0.05);
   }, [data]);
 
   return (
@@ -197,7 +202,7 @@ export default function GraphVisualizer({ data }: { data: any }) {
             <strong>Summary:</strong> <br />
             {data.summary}
           </div>
-         
+
         </>
       ) : (
         <div className="text-gray-500 italic">

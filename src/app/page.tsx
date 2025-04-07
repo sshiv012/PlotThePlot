@@ -115,19 +115,20 @@ export default function Home() {
           </div>
         </div>
 
-        <label className="flex items-start space-x-2 mt-3">
+        <div className="flex items-start gap-3 mt-3">
           <input
             type="checkbox"
             checked={validate}
             onChange={(e) => setValidate(e.target.checked)}
+            className="mt-1"
           />
-          <span>
-            <strong>Validate output</strong> <br />
-            <span className="text-gray-600 text-sm">
+          <div className="text-sm leading-snug">
+            <strong>Validate output</strong>
+            <p className="text-gray-600">
               Checks accuracy of extracted characters and relationships using Gemini's internal knowledge.
-            </span>
-          </span>
-        </label>
+            </p>
+          </div>
+        </div>
 
         <Button onClick={handleAnalyze} disabled={!bookId || loading}>
           {loading ? "Analyzing..." : "Analyze"}

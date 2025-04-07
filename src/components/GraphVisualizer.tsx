@@ -76,18 +76,14 @@ export default function GraphVisualizer({ data }: { data: any }) {
       .join("line")
       .attr("stroke-width", (d: any) => d.weight);
 
-    const node = svg
+    const nodeGroup = svg
       .append("g")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 1.5)
-      .selectAll("circle")
+      .selectAll("g")
       .data(nodes)
-      .join("circle")
-      .attr("r", 18)
-      .attr("fill", (d: any) => (d.main ? "#f87171" : "#60a5fa"))
-      
-      .on("mouseover", function (event, d:any) {
-        d3.select(this as SVGCircleElement).classed("node-highlight", true);
+      .join("g")
+      .attr("class", "node-group")
+      .on("mouseover", function (event, d: any) {
+        d3.select(this).select("rect").classed("node-highlight", true);
         tooltip
           .html(
             `<strong>${d.label}</strong><br/>` +
@@ -103,20 +99,27 @@ export default function GraphVisualizer({ data }: { data: any }) {
           .style("left", event.pageX + 15 + "px");
       })
       .on("mouseout", function () {
-        d3.select(this as SVGCircleElement).classed("node-highlight", false);
-        tooltip.style("visibility", "hidden")
-      })
-
-    node.append("title").text((d: any) => d.label);
-
-    const label = svg
-      .append("g")
-      .selectAll("text")
-      .data(nodes)
-      .join("text")
-      .attr("dy", 4)
-      .attr("dx", 22)
-      .text((d: any) => d.label);
+        d3.select(this).select("rect").classed("node-highlight", false);
+        tooltip.style("visibility", "hidden");
+      });
+    
+    // Draw rectangles with dynamic width
+    nodeGroup.append("rect")
+      .attr("fill", (d: any) => (d.main ? "#f87171" : "#60a5fa"))
+      .attr("rx", 6)
+      .attr("ry", 6)
+      .attr("height", 28)
+      .attr("width", (d: any) => d.label.length * 8 + 20) // padding around text
+      .attr("x", (d: any) => -(d.label.length * 4 + 10)) // center the rect
+      .attr("y", -14); // center vertically
+    
+    // Add text
+    nodeGroup.append("text")
+      .text((d: any) => d.label)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .attr("fill", "#fff")
+      .attr("font-size", 12);
 
     link
      .on("mouseover", function (event, d:any) {
@@ -152,11 +155,14 @@ export default function GraphVisualizer({ data }: { data: any }) {
         .attr("y1", (d: any) => d.source.y)
         .attr("x2", (d: any) => d.target.x)
         .attr("y2", (d: any) => d.target.y);
-
-      node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y);
-
-      label.attr("x", (d: any) => d.x).attr("y", (d: any) => d.y);
-    });
+      nodeGroup.attr("transform", (d: any) => {
+          // Clamp within bounds
+          d.x = Math.max(50, Math.min(width - 50, d.x));
+          d.y = Math.max(30, Math.min(height - 30, d.y));
+          return `translate(${d.x},${d.y})`;
+        });    
+      }).force("center", d3.forceCenter(width / 2, height / 2))
+    .alphaDecay(0.05) ;
   }, [data]);
 
   return (
@@ -170,6 +176,18 @@ export default function GraphVisualizer({ data }: { data: any }) {
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-blue-400"></div>
           <span className="text-sm text-gray-700">Supporting Character</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <svg width="50" height="10">
+            <line x1="0" y1="5" x2="50" y2="5" stroke="#999" strokeWidth="1" />
+          </svg>
+          <span className="text-sm text-gray-600">Low interaction</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <svg width="50" height="10">
+            <line x1="0" y1="5" x2="50" y2="5" stroke="#999" strokeWidth="6" />
+          </svg>
+          <span className="text-sm text-gray-600">Strong relationship</span>
         </div>
       </div>
       {data ? (

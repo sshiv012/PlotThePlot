@@ -113,12 +113,12 @@
 }
 
 .node-highlight {
-  stroke: #f59e0b; /* amber ring */
+  stroke: #f59e0b;
   stroke-width: 3px;
 }
 
 .edge-highlight {
-  stroke: #10b981 !important; /* emerald edge */
+  stroke: #10b981 !important;
 }
 
 @layer base {

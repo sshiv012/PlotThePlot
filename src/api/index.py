@@ -98,7 +98,7 @@ class PlotThePlot:
                 },
                 "summary": {
                     "type": "STRING",
-                    "description": "A detailed natural language summary of the story including the main plot, key players, and act-level breakdown"
+                    "description": "(A single human-readable paragraph or multi-paragraph block of plain text) A detailed natural language summary of the story including the main plot, key players, and act-level breakdown"
                 }
             },
             "required": ["characters", "relations", "summary"]
@@ -117,11 +117,7 @@ class PlotThePlot:
             "       - Famous, memorable, widely cited or emotionally significant\n"
             "       - Central to the relationship's arc or turning points in the story\n"
             "       - Representative of tension, affection, conflict, or a major plot event\n\n"
-            "3. Summary: At the top level, provide:\n"
-            "       - main_plot: a concise summary of the full narrative arc.\n"
-            "       - key_players: names of characters that significantly influence the story’s outcome.\n"
-            "       - acts: a list of act summaries. Each act should include a title and a short description of what happens, including major decisions or plot twists.\n"
-            "The ‘summary’ should be a human-readable text block that includes the main plot, key players, and act-wise breakdown — written in clear prose, not structured as nested JSON."
+            "3. Summary: The ‘summary’ should be a human-readable text block that includes the main plot, key players, and act-wise breakdown — written in clear prose (no JSON, lists or underscored names).\n"
             "Return valid JSON with exactly 'characters', 'relations' and 'summary'. No extra commentary.\n\nTEXT:\n" + text
         )
 

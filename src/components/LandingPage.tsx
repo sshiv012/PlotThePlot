@@ -136,8 +136,8 @@ export default function LandingPage() {
             Get Started
           </Button>
         </div>
-        <p className="text-sm text-gray-500 mt-4 italic max-w-2xl mx-auto whitespace-nowrap">
-          Pro tip: Works best with <span className="font-semibold">fictional books</span> - our character detector might get confused with research papers! 📚✨
+        <p className="text-sm text-gray-500 mt-4 italic px-4">
+          <span className="hidden sm:inline">Pro tip: </span>Works best with <span className="font-semibold">fictional books</span> 📚✨
         </p>
       </section>
 

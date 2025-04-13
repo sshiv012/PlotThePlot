@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, BookmarkPlus, Share2 } from "lucide-react";
+import { AlertCircle, BookmarkPlus, Share2, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LandingPage from "@/components/LandingPage";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -57,6 +57,20 @@ type TrendingBook = {
   last_searched: string;
 };
 
+type ValidationDetails = {
+  confidence: number;
+  notes?: string;
+};
+
+type ValidationData = {
+  characters?: Record<string, ValidationDetails>;
+  relationships?: Record<string, ValidationDetails>;
+  issues?: string[];
+  known_story?: boolean;
+  notes?: string;
+  score?: number;
+};
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [jsonData, setJsonData] = useState<any>(null);
@@ -79,6 +93,8 @@ export default function Home() {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [isSharing, setIsSharing] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
 
@@ -336,6 +352,7 @@ export default function Home() {
       return;
     }
 
+    setIsBookmarking(true);
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${BASE_URL}/api/auth/bookmarks`, {
@@ -363,7 +380,6 @@ export default function Home() {
       const data = await res.json();
       setError('');
       setNote('');
-      // Refresh bookmarks list
       fetchBookmarks();
       toast.success('Bookmark saved successfully!', {
         duration: 2000,
@@ -375,6 +391,8 @@ export default function Home() {
         duration: 2000,
         className: 'bg-red-500 text-white',
       });
+    } finally {
+      setTimeout(() => setIsBookmarking(false), 2000);
     }
   };
 
@@ -434,11 +452,13 @@ export default function Home() {
   };
 
   const copyToClipboard = () => {
+    setIsCopying(true);
     navigator.clipboard.writeText(shareLink);
     toast.success('Link copied to clipboard!', {
       duration: 2000,
       className: 'bg-green-500 text-white',
     });
+    setTimeout(() => setIsCopying(false), 2000);
   };
 
   if (isLoading) {
@@ -558,9 +578,19 @@ export default function Home() {
                     <Button 
                       onClick={handleBookmark}
                       className="flex items-center gap-2"
+                      disabled={isBookmarking}
                     >
-                      <BookmarkPlus className="h-4 w-4" />
-                      Save Bookmark
+                      {isBookmarking ? (
+                        <>
+                          <Check className="h-4 w-4" />
+                          Saved!
+                        </>
+                      ) : (
+                        <>
+                          <BookmarkPlus className="h-4 w-4" />
+                          Save Bookmark
+                        </>
+                      )}
                     </Button>
                     <Button 
                       variant="outline"
@@ -591,6 +621,77 @@ export default function Home() {
                 )}
               </div>
               <Graph data={jsonData} />
+              
+              {/* Validation Section */}
+              {validation && (
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="text-lg font-semibold mb-3">Validation Results</h3>
+                  
+                  {/* Overall Validation */}
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="text-2xl font-bold text-green-600">
+                        {validation.score}/10
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">Overall Assessment</div>
+                        <div className="text-sm text-gray-600">
+                          {validation.known_story ? "Known Story" : "New Story"}
+                        </div>
+                      </div>
+                    </div>
+                    {validation.notes && (
+                      <div className="text-sm text-gray-600 mt-2">
+                        {validation.notes}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Character and Relationship Validation */}
+                  <div className="space-y-4">
+                    {validation.characters && (
+                      <div>
+                        <h4 className="font-medium mb-2">Character Validation</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Object.entries(validation.characters).map(([character, details]) => (
+                            <div key={character} className="border rounded-lg p-3">
+                              <div className="font-medium">{character}</div>
+                              <div className="text-sm text-gray-600">
+                                Confidence: {(details as ValidationDetails).confidence}%
+                              </div>
+                              {(details as ValidationDetails).notes && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  {(details as ValidationDetails).notes}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {validation.relationships && (
+                      <div>
+                        <h4 className="font-medium mb-2">Relationship Validation</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Object.entries(validation.relationships).map(([relationship, details]) => (
+                            <div key={relationship} className="border rounded-lg p-3">
+                              <div className="font-medium">{relationship}</div>
+                              <div className="text-sm text-gray-600">
+                                Confidence: {(details as ValidationDetails).confidence}%
+                              </div>
+                              {(details as ValidationDetails).notes && (
+                                <div className="text-sm text-gray-600 mt-1">
+                                  {(details as ValidationDetails).notes}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -718,8 +819,15 @@ export default function Home() {
               readOnly
               className="flex-1"
             />
-            <Button onClick={copyToClipboard}>
-              Copy
+            <Button onClick={copyToClipboard} disabled={isCopying}>
+              {isCopying ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Copied!
+                </>
+              ) : (
+                'Copy'
+              )}
             </Button>
           </div>
         </DialogContent>

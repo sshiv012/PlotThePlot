@@ -28,6 +28,20 @@ type TrendingBook = {
   last_searched: string;
 };
 
+type ValidationDetails = {
+  confidence: number;
+  notes?: string;
+};
+
+type ValidationData = {
+  characters?: Record<string, ValidationDetails>;
+  relationships?: Record<string, ValidationDetails>;
+  issues?: string[];
+  known_story?: boolean;
+  notes?: string;
+  score?: number;
+};
+
 const formatDateTime = (utcDateString: string) => {
   const utcDate = new Date(utcDateString);
   const offset = utcDate.getTimezoneOffset();
@@ -136,6 +150,77 @@ export default function SharePage() {
               </div>
             )}
             <Graph data={analysis.response_data} />
+            
+            {/* Validation Section */}
+            {analysis.response_data.validation && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-lg font-semibold mb-3">Validation Results</h3>
+                
+                {/* Overall Validation */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="text-2xl font-bold text-green-600">
+                      {analysis.response_data.validation.score}/10
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Overall Assessment</div>
+                      <div className="text-sm text-gray-600">
+                        {analysis.response_data.validation.known_story ? "Known Story" : "New Story"}
+                      </div>
+                    </div>
+                  </div>
+                  {analysis.response_data.validation.notes && (
+                    <div className="text-sm text-gray-600 mt-2">
+                      {analysis.response_data.validation.notes}
+                    </div>
+                  )}
+                </div>
+
+                {/* Character and Relationship Validation */}
+                <div className="space-y-4">
+                  {analysis.response_data.validation.characters && (
+                    <div>
+                      <h4 className="font-medium mb-2">Character Validation</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(analysis.response_data.validation.characters).map(([character, details]) => (
+                          <div key={character} className="border rounded-lg p-3">
+                            <div className="font-medium">{character}</div>
+                            <div className="text-sm text-gray-600">
+                              Confidence: {(details as ValidationDetails).confidence}%
+                            </div>
+                            {(details as ValidationDetails).notes && (
+                              <div className="text-sm text-gray-600 mt-1">
+                                {(details as ValidationDetails).notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {analysis.response_data.validation.relationships && (
+                    <div>
+                      <h4 className="font-medium mb-2">Relationship Validation</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {Object.entries(analysis.response_data.validation.relationships).map(([relationship, details]) => (
+                          <div key={relationship} className="border rounded-lg p-3">
+                            <div className="font-medium">{relationship}</div>
+                            <div className="text-sm text-gray-600">
+                              Confidence: {(details as ValidationDetails).confidence}%
+                            </div>
+                            {(details as ValidationDetails).notes && (
+                              <div className="text-sm text-gray-600 mt-1">
+                                {(details as ValidationDetails).notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 

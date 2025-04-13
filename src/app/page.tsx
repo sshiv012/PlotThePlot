@@ -365,8 +365,16 @@ export default function Home() {
       setNote('');
       // Refresh bookmarks list
       fetchBookmarks();
+      toast.success('Bookmark saved successfully!', {
+        duration: 2000,
+        className: 'bg-green-500 text-white',
+      });
     } catch (e: any) {
       setError(e.message);
+      toast.error('Failed to save bookmark', {
+        duration: 2000,
+        className: 'bg-red-500 text-white',
+      });
     }
   };
 
@@ -427,7 +435,10 @@ export default function Home() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareLink);
-    toast.success('Link copied to clipboard!');
+    toast.success('Link copied to clipboard!', {
+      duration: 2000,
+      className: 'bg-green-500 text-white',
+    });
   };
 
   if (isLoading) {

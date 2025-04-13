@@ -54,7 +54,7 @@ export default function LandingPage() {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://suryaacharan.pythonanywhere.com";
+  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
 
   useEffect(() => {
     fetchTrending();

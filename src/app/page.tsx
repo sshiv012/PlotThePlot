@@ -6,9 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, BookmarkPlus } from "lucide-react";
+import { AlertCircle, BookmarkPlus, Share2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LandingPage from "@/components/LandingPage";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const formatDateTime = (utcDateString: string) => {
   // Create a date object from the UTC string
@@ -73,8 +75,12 @@ export default function Home() {
   const [userHistory, setUserHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLandingPage, setShowLandingPage] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
 
-  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://suryaacharan.pythonanywhere.com";
+  const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:5000";
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -380,6 +386,50 @@ export default function Home() {
     }
   };
 
+  const handleHeaderClick = () => {
+    setShowLandingPage(true);
+  };
+
+  const handleShare = async () => {
+    if (!user || !jsonData) return;
+    
+    setIsSharing(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BASE_URL}/api/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          book_id: bookId,
+          title: jsonData.title,
+          response_data: jsonData,
+          note: note
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to create share link');
+      }
+
+      const data = await res.json();
+      const shareUrl = `${window.location.origin}/share/${data.share_id}`;
+      setShareLink(shareUrl);
+      setShowShareDialog(true);
+    } catch (err) {
+      toast.error('Failed to create share link');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareLink);
+    toast.success('Link copied to clipboard!');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -388,7 +438,7 @@ export default function Home() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || showLandingPage) {
     return <LandingPage />;
   }
 
@@ -396,7 +446,12 @@ export default function Home() {
     <main className="p-4 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-2">
         <div>
-          <h1 className="text-3xl font-bold">PlotThePlot Visualizer</h1>
+          <h1 
+            className="text-3xl font-bold cursor-pointer hover:text-gray-600 transition-colors"
+            onClick={handleHeaderClick}
+          >
+            PlotThePlot Visualizer
+          </h1>
           {user && (
             <p className="text-sm text-gray-600 mt-1">Welcome, {user.username}</p>
           )}
@@ -488,13 +543,24 @@ export default function Home() {
               <div className="flex flex-col gap-4 mb-4">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold">Character Analysis</h2>
-                  <Button 
-                    onClick={handleBookmark}
-                    className="flex items-center gap-2"
-                  >
-                    <BookmarkPlus className="h-4 w-4" />
-                    Save Bookmark
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleBookmark}
+                      className="flex items-center gap-2"
+                    >
+                      <BookmarkPlus className="h-4 w-4" />
+                      Save Bookmark
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleShare}
+                      disabled={isSharing}
+                      className="flex items-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Share
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <label htmlFor="note" className="text-sm font-medium">Add a note (optional)</label>
@@ -625,6 +691,28 @@ export default function Home() {
           </Card>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share Analysis</DialogTitle>
+            <DialogDescription>
+              Share this analysis with others using the link below
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2">
+            <Input
+              value={shareLink}
+              readOnly
+              className="flex-1"
+            />
+            <Button onClick={copyToClipboard}>
+              Copy
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

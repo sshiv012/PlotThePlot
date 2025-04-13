@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import path
 import bcrypt
 import json
@@ -98,6 +98,21 @@ class BookAnalytics(Base):
             logger.error(f"Error creating book_analytics view: {str(e)}")
             raise
 
+class SharedAnalysis(Base):
+    __tablename__ = 'shared_analyses'
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    book_id = Column(String(100), nullable=False)
+    title = Column(String(200), nullable=False)
+    response_data = Column(Text, nullable=False)
+    note = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)  # Optional: Add expiration for shared links
+    
+    # Relationships
+    user = relationship("User")
+
 class Database:
     def __init__(self, db_filename: str = "plottheplot.db"):
         db_url = f"sqlite:///{path.join(ROOT, db_filename)}"
@@ -185,5 +200,52 @@ class Database:
                 .order_by(BookAnalytics.search_count.desc(), BookAnalytics.last_searched.desc())\
                 .limit(limit)\
                 .all()
+        finally:
+            session.close()
+    
+    def create_shared_analysis(self, user_id: int, book_id: str, title: str, response_data: dict, note: Optional[str] = None, expires_in_days: Optional[int] = None) -> SharedAnalysis:
+        """Create a new shared analysis link"""
+        session = self.Session()
+        try:
+            expires_at = None
+            if expires_in_days:
+                expires_at = datetime.utcnow() + timedelta(days=expires_in_days)
+            
+            shared = SharedAnalysis(
+                user_id=user_id,
+                book_id=book_id,
+                title=title,
+                response_data=json.dumps(response_data),
+                note=note,
+                expires_at=expires_at
+            )
+            session.add(shared)
+            session.commit()
+            session.refresh(shared)
+            return shared
+        finally:
+            session.close()
+    
+    def get_shared_analysis(self, share_id: str) -> Optional[dict]:
+        """Get a shared analysis by ID"""
+        session = self.Session()
+        try:
+            shared = session.query(SharedAnalysis).filter_by(id=share_id).first()
+            if not shared:
+                return None
+            
+            # Check if expired
+            if shared.expires_at and shared.expires_at < datetime.utcnow():
+                return None
+            
+            return {
+                'id': shared.id,
+                'book_id': shared.book_id,
+                'title': shared.title,
+                'response_data': json.loads(shared.response_data),
+                'note': shared.note,
+                'created_at': shared.created_at.isoformat(),
+                'shared_by': shared.user.username
+            }
         finally:
             session.close() 

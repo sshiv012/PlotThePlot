@@ -322,5 +322,45 @@ def get_trending():
         'last_searched': t.last_searched.isoformat()
     } for t in trending])
 
+@app.route('/api/share', methods=['POST'])
+def share_analysis():
+    try:
+        book_id = request.json.get('book_id')
+        title = request.json.get('title')
+        response_data = request.json.get('response_data')
+        note = request.json.get('note')
+        expires_in_days = request.json.get('expires_in_days', 30)  # Default 30 days
+        
+        if not all([book_id, title, response_data]):
+            return jsonify({'error': 'Book ID, title, and response data are required'}), 400
+        
+        # Get user ID from token
+        token = request.headers.get('Authorization').split(' ')[1]
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload['user_id']
+        
+        # Create shared analysis
+        shared = db.create_shared_analysis(user_id, book_id, title, response_data, note, expires_in_days)
+        
+        return jsonify({
+            'share_id': shared.id,
+            'expires_at': shared.expires_at.isoformat() if shared.expires_at else None
+        })
+    except Exception as e:
+        logger.error(f"Error sharing analysis: {str(e)}")
+        return jsonify({'error': 'Failed to share analysis'}), 500
+
+@app.route('/api/share/<share_id>', methods=['GET'])
+def get_shared_analysis(share_id):
+    try:
+        analysis = db.get_shared_analysis(share_id)
+        if not analysis:
+            return jsonify({'error': 'Shared analysis not found or expired'}), 404
+        
+        return jsonify(analysis)
+    except Exception as e:
+        logger.error(f"Error retrieving shared analysis: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve shared analysis'}), 500
+
 if __name__ == "__main__":
     app.run(debug=True, port=5328)

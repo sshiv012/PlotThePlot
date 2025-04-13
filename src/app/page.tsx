@@ -254,10 +254,38 @@ export default function Home() {
       if (data.validation) {
         setValidation(data.validation);
       }
+
+      await Promise.all([
+        fetchUserHistory(),
+        fetchBookmarks(),
+        fetchTrending()
+      ]);
     } catch (e: any) {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const handleHistoryClick = (history: any) => {
+    setBookId(history.book_id);
+    setValidate(false);
+    scrollToTop();
+    // Add visual feedback
+    const input = document.getElementById('bookIdInput');
+    if (input) {
+      input.focus();
+      input.classList.add('ring-2', 'ring-blue-500');
+      setTimeout(() => {
+        input.classList.remove('ring-2', 'ring-blue-500');
+      }, 1000);
     }
   };
 
@@ -278,6 +306,16 @@ export default function Home() {
         setJsonData(data.response_data.analysis);
         setValidation(data.response_data.validation);
         setNote(data.note || "");
+        scrollToTop();
+        // Add visual feedback
+        const input = document.getElementById('bookIdInput');
+        if (input) {
+          input.focus();
+          input.classList.add('ring-2', 'ring-blue-500');
+          setTimeout(() => {
+            input.classList.remove('ring-2', 'ring-blue-500');
+          }, 1000);
+        }
       }
     } catch (e) {
       console.error("Failed to fetch bookmark:", e);
@@ -326,6 +364,22 @@ export default function Home() {
     }
   };
 
+  const handleTrendingClick = (book: TrendingBook) => {
+    setBookId(book.book_id);
+    setValidate(false);
+    setCurrentBookmark(null);
+    scrollToTop();
+    // Add visual feedback
+    const input = document.getElementById('bookIdInput');
+    if (input) {
+      input.focus();
+      input.classList.add('ring-2', 'ring-blue-500');
+      setTimeout(() => {
+        input.classList.remove('ring-2', 'ring-blue-500');
+      }, 1000);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -340,14 +394,18 @@ export default function Home() {
 
   return (
     <main className="p-4 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">PlotThePlot</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">Welcome, {user?.username}</span>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-2">
+        <div>
+          <h1 className="text-3xl font-bold">PlotThePlot Visualizer</h1>
+          {user && (
+            <p className="text-sm text-gray-600 mt-1">Welcome, {user.username}</p>
+          )}
+        </div>
+        {user && (
           <Button variant="outline" onClick={handleLogout}>
             Logout
           </Button>
-        </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -367,6 +425,7 @@ export default function Home() {
             </h2>
 
             <Input
+              id="bookIdInput"
               type="text"
               placeholder="Enter Book ID (e.g., 16) or full Gutenberg URL"
               value={bookId}
@@ -475,10 +534,7 @@ export default function Home() {
                       <div
                         key={`${history.book_id}-${history.search_date}`}
                         className="p-2 rounded-lg border hover:bg-gray-50 cursor-pointer"
-                        onClick={() => {
-                          setBookId(history.book_id);
-                          setValidate(false);
-                        }}
+                        onClick={() => handleHistoryClick(history)}
                       >
                         <h3 className="font-medium">{history.title}</h3>
                         <div className="flex justify-between text-sm text-gray-500">
@@ -552,11 +608,7 @@ export default function Home() {
                       <div
                         key={book.book_id}
                         className="p-2 rounded-lg border hover:bg-gray-50 cursor-pointer"
-                        onClick={() => {
-                          setBookId(book.book_id);
-                          setValidate(false);
-                          setCurrentBookmark(null);
-                        }}
+                        onClick={() => handleTrendingClick(book)}
                       >
                         <div className="flex justify-between items-start">
                           <h3 className="font-medium">{book.title} <span className="text-sm text-gray-500">(ID: {book.book_id})</span></h3>

@@ -132,13 +132,13 @@ export default function GraphVisualizer({ data }: { data: any }) {
             `<strong>Relation:</strong><br/>` +
             `${d.source.label} (${d.role1}) → ${d.target.label} (${d.role2})<br/><br/>` +
             `<strong>Key Dialogs:</strong><br/>` +
-            d.key_dialogs.map((line: string) => `“${line}”`).join("<br/>")
+            d.key_dialogs.map((line: string) => `"${line}"`).join("<br/>")
           )
           .style("visibility", "visible");
 
         if (summaryRef.current) {
           summaryRef.current.innerHTML = `<strong>Relation:</strong> ${d.source.label} (${d.role1}) → ${d.target.label} (${d.role2})<br/><strong>Key Dialogs:</strong><br/>` +
-            d.key_dialogs.map((line: string) => `“${line}”`).join("<br/>");
+            d.key_dialogs.map((line: string) => `"${line}"`).join("<br/>");
         }
       })
       .on("mousemove", (event) => {
@@ -173,26 +173,32 @@ export default function GraphVisualizer({ data }: { data: any }) {
   return (
     <div className="p-4 space-y-4">
       {/* Legend at the top */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-400"></div>
-          <span className="text-sm text-gray-700">Main Character</span>
+      <div className="space-y-4">
+        {/* Nodes Legend */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-red-400"></div>
+            <span className="text-sm text-gray-700">Main Character</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-blue-400"></div>
+            <span className="text-sm text-gray-700">Supporting Character</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-blue-400"></div>
-          <span className="text-sm text-gray-700">Supporting Character</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <svg width="50" height="10">
-            <line x1="0" y1="5" x2="50" y2="5" stroke="#999" strokeWidth="1" />
-          </svg>
-          <span className="text-sm text-gray-600">Low interaction</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <svg width="50" height="10">
-            <line x1="0" y1="5" x2="50" y2="5" stroke="#999" strokeWidth="6" />
-          </svg>
-          <span className="text-sm text-gray-600">Strong relationship</span>
+        {/* Edges Legend */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <svg width="50" height="10">
+              <line x1="0" y1="5" x2="50" y2="5" stroke="#999" strokeWidth="1" />
+            </svg>
+            <span className="text-sm text-gray-600">Low interaction</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg width="50" height="10">
+              <line x1="0" y1="5" x2="50" y2="5" stroke="#999" strokeWidth="6" />
+            </svg>
+            <span className="text-sm text-gray-600">Strong<br />relationship</span>
+          </div>
         </div>
       </div>
       {data ? (

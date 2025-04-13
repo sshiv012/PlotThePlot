@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, Network, TrendingUp, Bookmark } from "lucide-react";
+import { BookOpen, Network, TrendingUp, Bookmark, MousePointer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
@@ -193,6 +193,15 @@ export default function LandingPage() {
               </p>
             </div>
 
+            {/* Hover Interaction */}
+            <div className="p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
+              <MousePointer className="w-8 h-8 mb-4 text-gray-600" />
+              <h3 className="text-xl font-semibold mb-2">Interactive Exploration</h3>
+              <p className="text-gray-600 mb-4">
+                Discover character details and relationships through intuitive hover interactions.
+              </p>
+            </div>
+
             {/* Trending Analysis */}
             <div className="p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
               <TrendingUp className="w-8 h-8 mb-4 text-gray-600" />
@@ -217,15 +226,6 @@ export default function LandingPage() {
               <h3 className="text-xl font-semibold mb-2">Validation</h3>
               <p className="text-gray-600">
                 Verify the accuracy of character relationships and story elements.
-              </p>
-            </div>
-
-            {/* Community */}
-            <div className="p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-8 h-8 mb-4 text-gray-600">👥</div>
-              <h3 className="text-xl font-semibold mb-2">Community</h3>
-              <p className="text-gray-600">
-                Join a community of book enthusiasts and share your insights.
               </p>
             </div>
           </div>

@@ -2,14 +2,46 @@ import os
 import time
 import json
 import requests
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import jwt
+from auth import JWT_SECRET, JWT_ALGORITHM
+from datetime import datetime, timedelta
 
 import google.generativeai as genai
 from bs4 import BeautifulSoup
+from auth import auth_bp
+from database import Database
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS
+CORS(app, 
+     resources={r"/*": {"origins": ["http://localhost:3000", "http://127.0.0.1:3000"]}},
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization", "Accept"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+app.secret_key = os.environ.get('SECRET_KEY', 'doggystyle')
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
+
+db = Database()
+
+# JWT Configuration
+JWT_EXPIRATION = timedelta(days=1)
+
 class PlotThePlot:
     def __init__(self, api_key: str, model_name: str = "gemini-2.0-flash"):
         self.api_key = api_key
@@ -55,7 +87,7 @@ class PlotThePlot:
                             },
                             "description": {
                                 "type": "STRING",
-                                "description": "Brief summary of this character’s role"
+                                "description": "Brief summary of this character's role"
                             }
                         },
                         "required": ["id", "common_name", "main_character", "names"]
@@ -117,7 +149,7 @@ class PlotThePlot:
             "       - Famous, memorable, widely cited or emotionally significant\n"
             "       - Central to the relationship's arc or turning points in the story\n"
             "       - Representative of tension, affection, conflict, or a major plot event\n\n"
-            "3. Summary: The ‘summary’ should be a human-readable text block that includes the main plot, key players, and act-wise breakdown — written in clear prose (no JSON, lists or underscored names).\n"
+            "3. Summary: The 'summary' should be a human-readable text block that includes the main plot, key players, and act-wise breakdown — written in clear prose (no JSON, lists or underscored names).\n"
             "Return valid JSON with exactly 'characters', 'relations' and 'summary'. No extra commentary.\n\nTEXT:\n" + text
         )
 
@@ -235,19 +267,60 @@ def fetch_gutenberg_metadata(book_id: int) -> dict:
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({'error': 'Please log in to analyze books'}), 401
+    
+    try:
+        token = auth_header.split(' ')[1]
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload['user_id']
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid token'}), 401
+    
     book_id = request.json.get("book_id")
     validate_flag = request.json.get("validate", False)
 
     if not book_id:
-        return jsonify({"error": "Missing book_id"}), 400
-    text = fetch_gutenberg_text(book_id)
-    plotter = PlotThePlot(api_key=os.getenv("GEMINI_API_KEY"))
-    result = plotter.analyze_text(text)
-    if validate_flag:
+        return jsonify({"error": "Please provide a book ID to analyze"}), 400
+    
+    try:
+        # Fetch metadata first to get the title
         metadata = fetch_gutenberg_metadata(book_id)
-        validation_result = plotter.validate_json(text, result, metadata)
-        result["validation"] = validation_result
-    return jsonify(result)
+        text = fetch_gutenberg_text(book_id)
+        plotter = PlotThePlot(api_key="AIzaSyCb_D852R_62KFkKGQG575qQpWykfo2GqI")
+        result = plotter.analyze_text(text)
+        
+        if validate_flag:
+            validation_result = plotter.validate_json(text, result, metadata)
+            result["validation"] = validation_result
+        
+        # Record the search in database using existing method
+        db.add_search(user_id, str(book_id), metadata['title'])
+        
+        # Add title to response
+        result["title"] = metadata['title']
+        
+        return jsonify(result)
+    except ValueError as e:
+        logger.warning(f"User error in analyze endpoint: {str(e)}")
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        logger.error(f"Unexpected error in analyze endpoint: {str(e)}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred while analyzing the book. Please try again later."}), 500
+
+@app.route('/api/trending', methods=['GET'])
+def get_trending():
+    limit = request.args.get('limit', default=10, type=int)
+    trending = db.get_trending_books(limit)
+    return jsonify([{
+        'book_id': t.book_id,
+        'title': t.title,
+        'search_count': t.search_count,
+        'last_searched': t.last_searched.isoformat()
+    } for t in trending])
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5328)

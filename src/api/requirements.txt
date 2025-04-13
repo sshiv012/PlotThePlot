@@ -1,5 +1,8 @@
-Flask
-flask-cors
-requests
-beautifulsoup4
+flask==3.0.2
+flask-cors==4.0.0
 google-generativeai
+sqlalchemy==2.0.28
+bcrypt==4.1.2
+python-dotenv==1.0.1
+beautifulsoup4==4.12.3
+requests==2.31.0 

@@ -13,24 +13,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from "sonner";
 
 const formatDateTime = (utcDateString: string) => {
-  // Create a date object from the UTC string
   const utcDate = new Date(utcDateString);
-  
-  // Get the timezone offset in minutes
   const offset = utcDate.getTimezoneOffset();
-  
-  // Create a new date adjusted for the local timezone
   const localDate = new Date(utcDate.getTime() - offset * 60000);
   
-  // Format in local time zone
-  return localDate.toLocaleString('en-US', {
-    year: '2-digit',
-    month: '2-digit',
-    day: '2-digit',
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  
+  const dateToCheck = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate());
+  
+  const timeString = localDate.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
-  }).replace(',', '');
+  });
+  
+  if (dateToCheck.getTime() === today.getTime()) {
+    return `Today at ${timeString}`;
+  } else if (dateToCheck.getTime() === yesterday.getTime()) {
+    return `Yesterday at ${timeString}`;
+  } else {
+    return localDate.toLocaleString('en-US', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }
 };
 
 const Graph = dynamic(() => import("@/components/GraphVisualizer"), {
@@ -793,7 +806,7 @@ export default function Home() {
                         </div>
                         <div className="flex justify-between items-end mt-1">
                           <span className="text-sm text-gray-500">{book.search_count} analyses</span>
-                          <span className="text-sm text-gray-500">{formatDateTime(book.last_searched)}</span>
+                          <span className="text-sm text-gray-500">Last read {formatDateTime(book.last_searched)}</span>
                         </div>
                       </div>
                     ))}

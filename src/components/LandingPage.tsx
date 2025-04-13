@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, Network, TrendingUp, Bookmark, MousePointer } from "lucide-react";
+import { BookOpen, Network, TrendingUp, Bookmark, MousePointer, Share2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
@@ -136,6 +136,9 @@ export default function LandingPage() {
             Get Started
           </Button>
         </div>
+        <p className="text-sm text-gray-500 mt-4 italic max-w-2xl mx-auto whitespace-nowrap">
+          Pro tip: Works best with <span className="font-semibold">fictional books</span> - our character detector might get confused with research papers! 📚✨
+        </p>
       </section>
 
       {/* Trending Section */}
@@ -180,7 +183,7 @@ export default function LandingPage() {
               <BookOpen className="w-8 h-8 mb-4 text-gray-600" />
               <h3 className="text-xl font-semibold mb-2">Book Analysis</h3>
               <p className="text-gray-600">
-                Extract and visualize character relationships from any Project Gutenberg book.
+                Extract and visualize character relationships from <span className="font-semibold">any Project Gutenberg book</span>.
               </p>
             </div>
 
@@ -188,17 +191,9 @@ export default function LandingPage() {
             <div className="p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
               <Network className="w-8 h-8 mb-4 text-gray-600" />
               <h3 className="text-xl font-semibold mb-2">Interactive Visualizations</h3>
-              <p className="text-gray-600">
-                Explore character networks with interactive graphs and relationship maps.
-              </p>
-            </div>
-
-            {/* Hover Interaction */}
-            <div className="p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
-              <MousePointer className="w-8 h-8 mb-4 text-gray-600" />
-              <h3 className="text-xl font-semibold mb-2">Interactive Exploration</h3>
               <p className="text-gray-600 mb-4">
-                Discover character details and relationships through intuitive hover interactions.
+                Explore character networks with interactive graphs and relationship maps.
+                Hover over nodes and edges to discover character details and relationships.
               </p>
             </div>
 
@@ -207,7 +202,7 @@ export default function LandingPage() {
               <TrendingUp className="w-8 h-8 mb-4 text-gray-600" />
               <h3 className="text-xl font-semibold mb-2">Trending Analysis</h3>
               <p className="text-gray-600">
-                Discover popular books and see what others are analyzing.
+                Discover <span className="font-semibold">popular books</span> and see what others are analyzing.
               </p>
             </div>
 
@@ -216,7 +211,16 @@ export default function LandingPage() {
               <Bookmark className="w-8 h-8 mb-4 text-gray-600" />
               <h3 className="text-xl font-semibold mb-2">Personal Bookmarks</h3>
               <p className="text-gray-600">
-                Save your favorite analyses and access them anytime.
+                <span className="font-semibold">Save your favorite analyses</span> and access them anytime.
+              </p>
+            </div>
+
+            {/* Share Analysis */}
+            <div className="p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
+              <Share2 className="w-8 h-8 mb-4 text-gray-600" />
+              <h3 className="text-xl font-semibold mb-2">Share Analysis</h3>
+              <p className="text-gray-600">
+                Share your analysis with others through a <span className="font-semibold">unique link</span>. <span className="font-semibold">No login required</span> to view.
               </p>
             </div>
 
@@ -225,7 +229,7 @@ export default function LandingPage() {
               <div className="w-8 h-8 mb-4 text-gray-600">✓</div>
               <h3 className="text-xl font-semibold mb-2">Validation</h3>
               <p className="text-gray-600">
-                Verify the accuracy of character relationships and story elements.
+                <span className="font-semibold">Verify the accuracy</span> of character relationships and story elements.
               </p>
             </div>
           </div>

@@ -290,7 +290,7 @@ def analyze():
         # Fetch metadata first to get the title
         metadata = fetch_gutenberg_metadata(book_id)
         text = fetch_gutenberg_text(book_id)
-        plotter = PlotThePlot(api_key="AIzaSyCb_D852R_62KFkKGQG575qQpWykfo2GqI")
+        plotter = PlotThePlot(api_key=os.environ.get('GEMINI_API_KEY'))
         result = plotter.analyze_text(text)
         
         if validate_flag:
